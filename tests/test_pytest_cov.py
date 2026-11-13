@@ -992,6 +992,65 @@ def test_answer():
 
 
 @pytest.mark.skipif('sys.platform == "win32" and platform.python_implementation() == "PyPy"')
+def test_dist_custom_tracer_with_master_coverage(testdir):
+    """A real master measurement must survive removal of empty source records."""
+    source = testdir.tmpdir.mkdir('src')
+    source.join('target.py').write('def answer():\n    return 42\n')
+    source.join('startup.py').write('def initialise():\n    return 17\ninitialise()\n')
+    testdir.tmpdir.join('demo_plugin.py').write(
+        """
+from pathlib import Path
+from coverage import CoveragePlugin, FileTracer
+
+class Tracer(FileTracer):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def source_filename(self):
+        return self.filename
+
+class Plugin(CoveragePlugin):
+    def file_tracer(self, filename):
+        if Path(filename).name == 'target.py':
+            return Tracer(filename)
+
+    def file_reporter(self, filename):
+        return 'python'
+
+def coverage_init(reg, options):
+    reg.add_file_tracer(Plugin())
+"""
+    )
+    testdir.tmpdir.join('conftest.py').write(
+        """
+import os
+import sys
+from pathlib import Path
+
+if 'PYTEST_XDIST_WORKER' not in os.environ:
+    sys.path.insert(0, str(Path(__file__).parent / 'src'))
+    import startup
+"""
+    )
+    testdir.tmpdir.join('.coveragerc').write('[run]\nbranch = true\nsource = src\nplugins = demo_plugin\n')
+    script = testdir.makepyfile(
+        test_target="""
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).parent / 'src'))
+from target import answer
+
+def test_answer():
+    assert answer() == 42
+"""
+    )
+    result = testdir.runpytest('-n', '2', '--cov', '--cov-report=term-missing', max_worker_restart_0, script)
+    assert result.ret == 0, result.stdout.str() + result.stderr.str()
+    result.stdout.fnmatch_lines(['*target.py*100%*', '*startup.py*100%*', '*1 passed*'])
+
+
+@pytest.mark.skipif('sys.platform == "win32" and platform.python_implementation() == "PyPy"')
 def test_dist_collocated(pytester, testdir, prop):
     script = testdir.makepyfile(prop.code)
     testdir.tmpdir.join('.coveragerc').write(prop.fullconf)
