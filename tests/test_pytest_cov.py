@@ -944,7 +944,10 @@ def test_foo(foo):
     assert result.ret == 0
 
 
-@pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Custom file tracers require coverage CTracer')
+@pytest.mark.skipif(
+    platform.python_implementation() == 'PyPy' or sys.version_info >= (3, 15),
+    reason='coverage CTracer is required for custom file tracers and is unavailable on this runtime',
+)
 @pytest.mark.parametrize('execute_on_master', [False, True], ids=['empty-master', 'master-has-coverage'])
 def test_dist_custom_file_tracer_does_not_conflict(testdir, execute_on_master):
     """Only genuine master measurements may be combined with worker tracer records (#642)."""

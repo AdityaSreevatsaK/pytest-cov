@@ -237,7 +237,7 @@ Unreleased
 -------------------
 
 * Changed the `toml` requirement to be always be directly required (instead of being required through a coverage extra).
-  This fixes issues with pip-compile (`pip-tools#1300 <https://github.com/jazzband/pip-tools/issues/1300>`_).
+  This fixes issues with pip-compile (`pip-tools#1300 <https://github.com/pypa/pip-tools/issues/1300>`_).
   Contributed by Sorin Sbarnea in `#472 <https://github.com/pytest-dev/pytest-cov/pull/472>`_.
 * Documented ``show_contexts``.
   Contributed by Brian Rutledge in `#473 <https://github.com/pytest-dev/pytest-cov/pull/473>`_.
