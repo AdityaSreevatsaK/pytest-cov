@@ -1006,6 +1006,12 @@ def test_answer():
     patterns = ['*startup.py*100%*'] if execute_on_master else []
     result.stdout.fnmatch_lines([*patterns, '*target.py*100%*', '*1 passed*'])
 
+    # Verify the successful merge kept the worker's custom file tracer.
+    data = coverage.CoverageData(str(testdir.tmpdir.join('.coverage')))
+    data.read()
+    tracer_names = {Path(filename).name: data.file_tracer(filename) for filename in data.measured_files()}
+    assert tracer_names['target.py'] == 'demo_plugin.Plugin'
+
 
 @pytest.mark.skipif('sys.platform == "win32" and platform.python_implementation() == "PyPy"')
 def test_dist_collocated(pytester, testdir, prop):
