@@ -378,6 +378,10 @@ class DistMaster(CovController):
         if any(data.arcs(filename) or data.lines(filename) for filename in data.measured_files()):
             # Preserve real master-process coverage, when there is any.
             self.cov.save()
+        else:
+            # get_data() may already have created a parallel data file. Remove
+            # only this empty master file, not the workers' parallel files.
+            data.erase()
         self.cov = self.combining_cov
         self.cov.load()
         self.cov.combine()
