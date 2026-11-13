@@ -944,7 +944,7 @@ def test_foo(foo):
     assert result.ret == 0
 
 
-@pytest.mark.skipif('sys.platform == "win32" and platform.python_implementation() == "PyPy"')
+@pytest.mark.skipif(platform.python_implementation() == 'PyPy', reason='Custom file tracers require coverage CTracer')
 @pytest.mark.parametrize('execute_on_master', [False, True], ids=['empty-master', 'master-has-coverage'])
 def test_dist_custom_file_tracer_does_not_conflict(testdir, execute_on_master):
     """Only genuine master measurements may be combined with worker tracer records (#642)."""
@@ -988,7 +988,8 @@ if 'PYTEST_XDIST_WORKER' not in os.environ:
 """
         )
 
-    testdir.tmpdir.join('.coveragerc').write('[run]\nbranch = true\nsource = src\nplugins = demo_plugin\n')
+    # coverage.py's SysMonitor and PyTracer cores do not support custom file tracers.
+    testdir.tmpdir.join('.coveragerc').write('[run]\ncore = ctrace\nbranch = true\nsource = src\nplugins = demo_plugin\n')
     script = testdir.makepyfile(
         test_target="""
 from pathlib import Path
