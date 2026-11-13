@@ -370,9 +370,14 @@ class DistMaster(CovController):
     def finish(self):
         """Combines coverage data and sets the list of coverage objects to report on."""
 
-        # Combine all the suffix files into the data file.
+        # coverage.py touches configured source files even when no code was
+        # executed in the xdist master. Saving those empty records can conflict
+        # with custom file tracers recorded by the workers (#642).
         self.cov.stop()
-        self.cov.save()
+        data = self.cov.get_data()
+        if any(data.arcs(filename) or data.lines(filename) for filename in data.measured_files()):
+            # Preserve real master-process coverage, when there is any.
+            self.cov.save()
         self.cov = self.combining_cov
         self.cov.load()
         self.cov.combine()
