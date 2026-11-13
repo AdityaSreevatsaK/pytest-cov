@@ -5,6 +5,11 @@ Changelog
 Unreleased
 ----------
 
+* Fixed pytest-xdist coverage merging with custom file tracers when the master
+  process records unexecuted source files without tracer metadata. Actual
+  master coverage and contexts are preserved.
+  See `#642 <https://github.com/pytest-dev/pytest-cov/issues/642>`_.
+
 * Fixed no_cover markers and fixtures when coverage is disabled with --no-cov.
   Fixes #590.
 * Document the import-path difference between ``coverage run -m pytest`` and ``pytest --cov`` for users migrating from coverage.py.
